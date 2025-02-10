@@ -1,0 +1,143 @@
+# Wikipedia Edit Tracker
+
+This program tracks recent Wikipedia edits by monitoring the Wikimedia event stream. It stores edit counts per language and date in an SQLite database and allows users to set their preferred language.
+
+## Features
+
+- Tracks Wikipedia edits in real-time.
+- Stores edit counts by language and date.
+- Allows users to set and retrieve their preferred language.
+- Uses SQLite for lightweight, local data storage.
+- Can be integrated into a Discord server as a bot.
+
+## Requirements
+
+- Go 1.18+
+- SQLite3
+- Discord Bot Token (for Discord integration)
+
+## Installation
+
+1. **Clone the repository**
+   ```sh
+   git clone <repository_url>
+   cd <repository_folder>
+   ```
+2. **Install dependencies**
+   ```sh
+   go mod tidy
+   ```
+
+## Usage
+
+### Running the Program
+
+1. **Compile and run the application**
+
+   ```sh
+   go run main.go
+   ```
+
+2. **Tracking Wikipedia Edits**
+
+   - The program will listen to Wikimedia's event stream and store edit counts in `wikipedia_bot.db`.
+
+### Launching the Bot in a Discord Server
+
+1. **Create a Discord Bot**
+   - Go to the [Discord Developer Portal](https://discord.com/developers/applications)
+   - Create a new application and add a bot.
+   - Copy the bot token.
+2. **Add the Bot to a Server**
+   - Generate an OAuth2 invite link with `bot` and `messages.read` permissions.
+   - Invite the bot to your Discord server.
+3. **Run the Discord Bot**
+   - Set up environment variables or configuration to include your bot token.
+   - Modify the code to connect the bot to a Discord server and listen for commands.
+   - Start the bot with:
+     ```sh
+     go run main.go
+     ```
+
+### Discord Bot Commands
+
+#### `!recent`
+Retrieves the most recent changes for the current or specified language.
+
+#### `!setLang [language_code]`
+Sets a default language for the user/server session.
+
+#### Change Information Display
+Displays relevant information about each change, including:
+- Title
+- URL
+- User
+- Timestamp
+
+### Bonus Feature: Daily Stats
+
+- Tracks the number of changes per day for each language.
+- Provides a command:
+  ```sh
+  !stats [yyyy-mm-dd]
+  ```
+  to display how many changes occurred on that date for the chosen language.
+- Consider storing data in a scalable database (e.g., PostgreSQL, MongoDB, or Redis).
+
+### Database Structure
+
+The SQLite database contains two tables:
+
+#### `stats`
+
+| Column | Type    | Description                             |
+| ------ | ------- | --------------------------------------- |
+| date   | TEXT    | Date of the edit (YYYY-MM-DD)           |
+| lang   | TEXT    | Wikipedia language (e.g., `en`, `fr`)   |
+| edits  | INTEGER | Number of edits for the date & language |
+
+#### `user_lang`
+
+| Column   | Type | Description        |
+| -------- | ---- | ------------------ |
+| user\_id | TEXT | Unique user ID     |
+| lang     | TEXT | Preferred language |
+
+### API Functions
+
+- `storeEditCount(lang, date)` – Stores an edit count for a given language and date.
+- `getEditCount(date, lang) -> int` – Retrieves the number of edits for a given date and language.
+- `getUserLanguage(userID) -> string` – Gets the preferred language of a user.
+- `setUserLanguage(userID, lang)` – Sets a user’s preferred language.
+
+## Design Decisions and Trade-Offs
+
+1. The app reads from the streaming API and updates the count of messages read for a date-language pair in memory. However, every 100 messages, we update the count in the database. This ensures that we are not running expensive SQL queries on every single message, while also providing a decent persistence of statistical data in case the app crashes and has to reboot.
+2. When the app restarts, it will bootstrap the count from the database, save it into memory, and continue counting. When a user asks for the stats, it will return immediately from an in-memory map.
+
+### Additional Feature
+- The app also stores the latest Kafka offset read for each language-date pair, which is part of the payload that Wikipedia's streaming API provides. This was initially done to avoid counting the same message twice. However, later it was realized that the app always reads the latest message when it restarts, making this feature unnecessary for now, but it can be utilized if conditions change.
+
+## Ideas on Scaling Using Kafka
+
+1. If we need to perform distributed processing of these messages from the stream, we could design the following architecture:
+
+### Kafka Producer
+- Have a single Kafka producer that performs a lightweight operation of reading from the stream and publishing this data into an internal Kafka topic.
+- Use multiple partitions for the topic and make the producer do Round-Robin publishing for those partitions.
+
+### Kafka Consumer
+- Have multiple consumers depending on the load and assign them to different partitions.
+- These consumers can now parallelize the processing of the messages.
+
+## Issues & Debugging
+
+- Ensure `wikipedia_bot.db` is writable.
+- Check if SQLite3 is installed properly.
+- Verify Go modules are installed with `go mod tidy`.
+- Ensure the Discord bot token is set correctly.
+
+## License
+
+MIT License
+
