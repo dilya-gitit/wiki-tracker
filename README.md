@@ -10,6 +10,12 @@ This program tracks recent Wikipedia edits by monitoring the Wikimedia event str
 - Uses SQLite for lightweight, local data storage.
 - Can be integrated into a Discord server as a bot.
 - Output the most recent five updates for requested language and date.
+  
+## Invite the Bot to a Server
+
+To invite the bot to your own Discord server, click the link below:
+
+[Invite Bot](https://discord.com/oauth2/authorize?client_id=1338236890566099034&permissions=277025507328&integration_type=0&scope=bot)
 
 ## Requirements
 
@@ -21,8 +27,8 @@ This program tracks recent Wikipedia edits by monitoring the Wikimedia event str
 
 1. **Clone the repository**
    ```sh
-   git clone <repository_url>
-   cd <repository_folder>
+   git clone https://github.com/dilya-gitit/wiki-tracker
+   cd wiki-tracker
    ```
 2. **Install dependencies**
    ```sh
