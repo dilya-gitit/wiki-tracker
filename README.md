@@ -70,6 +70,9 @@ Sets a default language for the user/server session.
 #### `!stats [yyyy-mm-dd]`
 Returns the number of edits per day for the chosen language.
 
+## CI/CD
+1. Currently, the repository has a basic workflow to run Go tests and build on every push and PR to main.
+
 ## Design Decisions and Trade-Offs
 
 1. The app reads from the streaming API and updates the count of messages read for a date-language pair in memory. However, every 100 messages, we update the count in the database. This ensures that we are not running expensive SQL queries on every single message, while also providing a decent persistence of statistical data in case the app crashes and has to reboot.
